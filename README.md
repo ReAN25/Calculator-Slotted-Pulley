@@ -5,118 +5,118 @@
 [![GUI](https://img.shields.io/badge/GUI-Tkinter%20%7C%20Matplotlib-orange.svg)](#)
 [![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)](#)
 
-Aplikasi desktop interaktif berbasis Python untuk menghitung parameter teknik, geometri chordal action, dan mensimulasikan kinematika **Pulley Timing Belt Berongga (Slotted Pulley)**. 
+An interactive desktop application built in Python for calculating engineering parameters, chordal action geometry, and simulating the kinematics of **Slotted Timing Belt Pulleys**.
 
-Dirancang khusus untuk kebutuhan perancangan mekanisme transmisi timing belt yang memiliki **bracket / attachment pembawa** pada belt, di mana pulley memerlukan rongga U-slot presisi agar bracket dapat melintas bebas tanpa benturan (*collision-free*).
-
----
-
-## 📸 Tampilan Antarmuka (Preview)
-
-Aplikasi dilengkapi antarmuka modern dark-mode (Catppuccin themed) yang terbagi menjadi 3 panel:
-1. **Panel Kontrol & Parameter Desain** (Kiri)
-2. **Visualisasi Animasi Kinematika Real-Time** (Tengah)
-3. **Laporan & Verifikasi Teknis Lengkap** (Kanan)
+Specifically engineered for timing belt transmission mechanisms carrying **brackets / carrier attachments** on the belt, where pulleys require precision U-shaped slots to allow brackets to pass through without collision (*collision-free clearance*).
 
 ---
 
-## ✨ Fitur Utama
+## 📸 Interface Overview
 
-- 📐 **Kalkulasi Geometri & Kinematika Presisi**:
-  - Penentuan Pitch Diameter ($D_p$) dan Outer Diameter ($D_o$).
-  - Perhitungan Jarak Antar Sumbu (*Center Distance - $C$*) secara eksak menggunakan iterasi analitik Newton-Raphson.
-  - Perhitungan sudut kontak (*Wrap Angle*) dan panjang lintasan belt.
-- 🎯 **Analisis Chordal Action & Dimensi Rongga (Slot)**:
-  - **Chordal Dip**: Penurunan lintasan chordal saat bracket melingkari pulley.
-  - **Ayunan Masuk/Keluar (Lead-in Swing)**: Deformasi sudut saat attachment memasuki radius pulley.
-  - Rekomendasi dimensi rongga U-slot (lebar & kedalaman minimum) dengan penambahan toleransi *clearance*.
-- 🔄 **Verifikasi Sinkronisasi Otomatis**:
-  - Validasi matematis apakah posisi rongga pulley driver dan driven akan selalu bertepatan dengan bracket belt setiap siklus putaran:
-    $$\text{Periode} = \frac{Z}{\text{slots}} \quad \text{dan} \quad Z_{belt} \pmod{\frac{Z}{\text{slots}}} = 0$$
-- 🛡️ **Pengecekan Kekuatan & Integritas Mekanik**:
-  - Estimasi gaya tarik belt ($F_t$) berdasarkan torsi kerja ($T$).
-  - Jumlah gigi aktif yang mencengkeram (*remaining engaged teeth*).
-  - Ketebalan sisa dinding struktural antara dasar rongga dan diameter poros (*shaft wall thickness*).
-- 🎬 **Simulasi Animasi & Inspeksi Interaktif**:
-  - Animasi gerak kontinu dengan pengaturan kecepatan putar variabel.
-  - Fitur **Inspeksi Manual (Slider)** untuk memeriksa pergerakan langkah demi langkah (0 - 3 siklus putaran) guna mengamati clearance saat bracket memasuki rongga.
+The application features a sleek dark-mode UI (Catppuccin theme) divided into three synchronized panels:
+1. **Design Parameter & Control Panel** (Left) — Input geometry, tolerances, speed, and manual inspection sliders.
+2. **Real-Time Kinematic Simulation** (Center) — Matplotlib canvas rendering continuous rotation, belt tracking, and chordal trajectories.
+3. **Engineering Report & Validation** (Right) — Instant validation banners and comprehensive mechanical telemetry.
 
 ---
 
-## 🧮 Rumus & Logika Perhitungan
+## ✨ Key Features
 
-| Parameter | Rumus / Pendekatan | Deskripsi |
+- 📐 **High-Precision Geometry & Kinematics**:
+  - Exact Pitch Diameter ($D_p$) and Outer Diameter ($D_o$) calculations.
+  - Closed-loop Center Distance ($C$) solved analytically via Newton-Raphson iteration.
+  - Contact wrap angles ($\theta_{\text{wrap}}$) and tangent belt span lengths.
+- 🎯 **Chordal Action & Slot Sizing Analysis**:
+  - **Chordal Dip ($\Delta_{\text{dip}}$)**: Sinking depth calculation as the rigid bracket spans across pulley curvature.
+  - **Lead-in / Exit Swing ($\delta_{\text{swing}}$)**: Angular offset dynamic clearance during belt meshing.
+  - Recommended U-slot dimensions (width & depth) incorporating custom safety clearance.
+- 🔄 **Automatic Synchronization Verification**:
+  - Mathematical proof to verify if pulley slots and belt attachments align consistently across infinite cycles:
+    $$\text{Slot Period} = \frac{Z}{\text{slots}} \quad \text{and} \quad Z_{\text{belt}} \pmod{\frac{Z}{\text{slots}}} = 0$$
+- 🛡️ **Mechanical Strength & Shaft Safety Checks**:
+  - Working belt tension ($F_t$) estimation from target torque ($T$).
+  - Effective tooth engagement count (*remaining active teeth*).
+  - Residual wall thickness between the slot base and motor/drive shaft bore.
+- 🎬 **Kinematic Animation & Frame-by-Frame Inspection**:
+  - Smooth real-time animation with adjustable speed.
+  - **Manual Inspection Slider** ($0 - 3$ full belt cycles) for micro-stepping the bracket into and out of the pulley slot.
+
+---
+
+## 🧮 Theoretical Background & Engineering Formulas
+
+| Parameter | Formula / Method | Description |
 | :--- | :--- | :--- |
-| **Pitch Diameter ($D_p$)** | $D_p = \frac{Z \cdot p}{\pi}$ | Diameter pitch standar timing belt |
-| **Outer Diameter ($D_o$)** | $D_o = 2 \times (r_p - \Delta_{ded})$ | Diameter luar pulley dikurangi dedendum gigi |
-| **Center Distance ($C$)** | $L \approx 2C + \pi(r_1+r_2) + \frac{(r_2-r_1)^2}{C}$ (Iteratif) | Jarak sumbu presisi belt loop tertutup |
-| **Chordal Dip** | $\Delta_{\text{dip}} = r_p - \sqrt{r_p^2 - (w/2)^2}$ | Penurunan bracket akibat lintasan lurus |
-| **Ayunan Masuk** | $\delta_{\text{swing}} = h \cdot \left(\frac{w/2}{r_p}\right)$ | Ayunan ujung bracket saat membelok |
-| **Kedalaman Rongga** | $d_{\text{slot}} = (h - (r_p - r_o)) + \Delta_{\text{dip}} + c$ | Kedalaman pemotongan U-slot aman |
-| **Lebar Rongga** | $w_{\text{slot}} = 2 \cdot (w/2 + \delta_{\text{swing}} + c)$ | Bukaan lebar U-slot aman |
+| **Pitch Diameter ($D_p$)** | $D_p = \frac{Z \cdot p}{\pi}$ | Standard timing belt pitch circle diameter |
+| **Outer Diameter ($D_o$)** | $D_o = 2 \times (r_p - \Delta_{\text{ded}})$ | Pulley outer diameter minus tooth dedendum |
+| **Center Distance ($C$)** | $L \approx 2C + \pi(r_1+r_2) + \frac{(r_2-r_1)^2}{C}$ *(Iterative)* | Closed-loop belt center-to-center distance |
+| **Chordal Dip** | $\Delta_{\text{dip}} = r_p - \sqrt{r_p^2 - (w/2)^2}$ | Sagitta drop due to straight-line bracket chord |
+| **Lead-in Swing** | $\delta_{\text{swing}} = h \cdot \left(\frac{w/2}{r_p}\right)$ | Corner displacement as bracket enters radius |
+| **Slot Depth ($d_{\text{slot}}$)** | $d_{\text{slot}} = (h - (r_p - r_o)) + \Delta_{\text{dip}} + c$ | Minimum safe cutting depth for U-slot |
+| **Slot Width ($w_{\text{slot}}$)** | $w_{\text{slot}} = 2 \cdot (w/2 + \delta_{\text{swing}} + c)$ | Minimum clearance width for bracket passage |
 
 ---
 
-## 🛠️ Kebutuhan Sistem & Instalasi
+## 🛠️ System Requirements & Installation
 
-### Prasyarat
-Pastikan Anda telah menginstal **Python 3.8** atau versi yang lebih baru di sistem Anda.
+### Prerequisites
+Make sure you have **Python 3.8+** installed on your system.
 
-### Instalasi Dependensi
-Aplikasi ini menggunakan pustaka standar `tkinter` serta pustaka ilmiah `numpy` dan `matplotlib`:
+### Dependencies
+Install the required scientific packages via `pip`:
 
 ```bash
 pip install numpy matplotlib
 ```
 
-*(Catatan untuk Linux: jika `tkinter` belum terpasang, instal melalui `sudo apt install python3-tk`)*
+*(Note for Linux users: ensure Tkinter is installed via `sudo apt install python3-tk`)*
 
 ---
 
-## 🚀 Cara Menjalankan
+## 🚀 Getting Started
 
-1. Clone repositori ini atau download source code:
+1. Clone the repository:
    ```bash
    git clone https://github.com/ReAN25/Calculator-Slotted-Pulley.git
    cd Calculator-Slotted-Pulley
    ```
-2. Jalankan aplikasi:
+2. Run the application:
    ```bash
    python slotted_pulley_calculator.py
    ```
 
 ---
 
-## 📖 Panduan Penggunaan
+## 📖 Usage Guide
 
-1. **Input Parameter Desain**: Masukkan konfigurasi sistem Anda di panel kiri:
-   - Pitch Timing Belt (misal: 3 mm untuk GT2 / HTD 3M)
-   - Jumlah gigi pulley Driver ($Z_1$) dan Driven ($Z_2$)
-   - Jumlah total gigi belt ($Z_b$)
-   - Jumlah rongga pada masing-masing pulley
-   - Dimensi Bracket: lebar ($b_{\text{width}}$) dan tinggi tonjolan ($b_{\text{height}}$)
-   - Clearance tambahan dan diameter poros driver ($D_{\text{shaft}}$)
-   - Torsi kerja motor
-2. **Update Konfigurasi**: Klik tombol **`Update Konfigurasi & Grafik`**.
-3. **Evaluasi Status**: Perhatikan banner indikator pada panel kanan:
-   - 🟢 **SINKRON & AMAN**: Geometri dan siklus timing sinkron tanpa tabrakan.
-   - 🔴 **TIDAK SINKRON**: Bracket akan menabrak gigi pulley di putaran tertentu.
-   - 🟠 **CEK DINDING / JARAK C**: Dinding poros terlalu tipis atau jarak center terlalu mepet.
-4. **Analisis Gerak**: Gunakan tombol **Pause / Play** atau geser **Slider Inspeksi Manual** untuk melihat bracket masuk dan keluar rongga pulley secara mendetail.
+1. **Enter Parameters** (Left Panel):
+   - Belt Pitch (e.g. `3.0` mm for GT2 / HTD 3M)
+   - Driver ($Z_1$) and Driven ($Z_2$) tooth count
+   - Belt tooth count ($Z_{\text{belt}}$)
+   - Number of slots on driver/driven pulleys
+   - Bracket Dimensions: Width ($b_{\text{width}}$) and Height ($b_{\text{height}}$)
+   - Clearance margin & Driver shaft diameter ($D_{\text{shaft}}$)
+   - Operating torque
+2. **Update & Recalculate**: Click **`Update Konfigurasi & Grafik`** to recompute math and re-render the visual geometry.
+3. **Verify Status Banner** (Right Panel):
+   - 🟢 **STATUS: SINKRON & AMAN**: System is fully synchronized; clearances and shaft wall thickness are safe.
+   - 🔴 **PERINGATAN: TIDAK SINKRON**: Bracket will collide with pulley teeth on subsequent cycles.
+   - 🟠 **PERINGATAN: CEK DINDING / JARAK C**: Structural wall is too thin ($< 1.5$ mm) or center distance is invalid.
+4. **Inspect Motion**: Use **Play/Pause** or slide the **Manual Inspection Slider** to scrutinize entry/exit trajectory points.
 
 ---
 
-## 📂 Struktur File
+## 📂 Project Structure
 
 ```text
 Calculator-Slotted-Pulley/
-├── slotted_pulley_calculator.py   # Script utama aplikasi GUI & kalkulator
-├── README.md                      # Dokumentasi teknis proyek
-└── .gitignore                     # Filter file temporary / cache
+├── slotted_pulley_calculator.py   # Main application, GUI, & kinematic math
+├── README.md                      # English technical documentation
+└── .gitignore                     # Git ignore rules for Python / IDE artifacts
 ```
 
 ---
 
-## 📄 Lisensi
+## 📄 License
 
-Proyek ini didistribusikan di bawah lisensi **MIT**. Silakan gunakan, modifikasi, dan kembangkan sesuai kebutuhan riset maupun industri Anda.
+This project is open-source and distributed under the **[MIT License](LICENSE)**. Feel free to use, modify, and integrate it into your robotics or mechanical design projects.
