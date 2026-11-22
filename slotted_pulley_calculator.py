@@ -10,12 +10,12 @@ from matplotlib.animation import FuncAnimation
 class TimingBeltSlotSimulator:
     def __init__(self, root):
         self.root = root
-        self.root.title("Simulasi Pulley Timing Belt Berongga (Sederhana)")
+        self.root.title("Slotted Timing Belt Pulley Simulation")
         self.root.geometry("1400x800")
         self.root.configure(bg="#1e1e2e")
 
         self.is_playing = True
-        self.s_total = 0.0  # Jarak tempuh kontinu (mm) agar rotasi pulley tidak ter-reset
+        self.s_total = 0.0  # Continuous travel distance (mm) so pulley rotation does not reset
         self.params = {}
 
         self._build_ui()
@@ -36,12 +36,12 @@ class TimingBeltSlotSimulator:
         main_container = tk.Frame(self.root, bg="#1e1e2e")
         main_container.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
 
-        # ================= PANEL KIRI: INPUT & KONTROL =================
+        # ================= LEFT PANEL: INPUTS & CONTROLS =================
         left_frame = ttk.Frame(main_container, width=280)
         left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 8))
         left_frame.pack_propagate(False)
 
-        ttk.Label(left_frame, text="PARAMETER DESAIN", style="Header.TLabel").pack(
+        ttk.Label(left_frame, text="DESIGN PARAMETERS", style="Header.TLabel").pack(
             anchor="w", padx=10, pady=(10, 6)
         )
 
@@ -60,17 +60,17 @@ class TimingBeltSlotSimulator:
         }
 
         fields = [
-            ("Pitch Belt (mm):", "pitch"),
-            ("Gigi Pulley Driver (Z1):", "z1"),
-            ("Gigi Pulley Driven (Z2):", "z2"),
-            ("Total Gigi Belt (Zb):", "z_belt"),
-            ("Jumlah Rongga Driver:", "slots1"),
-            ("Jumlah Rongga Driven:", "slots2"),
-            ("Lebar Bracket (mm):", "b_width"),
-            ("Tinggi Tonjolan Bracket (mm):", "b_height"),
-            ("Clearance Rongga (mm):", "clearance"),
-            ("Diameter Poros Driver (mm):", "shaft_d1"),
-            ("Torsi Kerja (kg.cm):", "torque"),
+            ("Belt Pitch (mm):", "pitch"),
+            ("Driver Pulley Teeth (Z1):", "z1"),
+            ("Driven Pulley Teeth (Z2):", "z2"),
+            ("Total Belt Teeth (Zb):", "z_belt"),
+            ("Driver Slot Count:", "slots1"),
+            ("Driven Slot Count:", "slots2"),
+            ("Bracket Width (mm):", "b_width"),
+            ("Bracket Protrusion Height (mm):", "b_height"),
+            ("Slot Clearance (mm):", "clearance"),
+            ("Driver Shaft Diameter (mm):", "shaft_d1"),
+            ("Operating Torque (kg.cm):", "torque"),
         ]
 
         form_frame = ttk.Frame(left_frame)
@@ -83,12 +83,12 @@ class TimingBeltSlotSimulator:
         form_frame.columnconfigure(0, weight=1)
 
         btn_update = ttk.Button(
-            left_frame, text="Update Konfigurasi & Grafik", command=self.recalculate_and_redraw
+            left_frame, text="Update Configuration & Plot", command=self.recalculate_and_redraw
         )
         btn_update.pack(fill=tk.X, padx=10, pady=(12, 6))
 
         ttk.Separator(left_frame, orient="horizontal").pack(fill=tk.X, padx=10, pady=8)
-        ttk.Label(left_frame, text="KONTROL SIMULASI", style="Header.TLabel").pack(
+        ttk.Label(left_frame, text="SIMULATION CONTROLS", style="Header.TLabel").pack(
             anchor="w", padx=10, pady=(0, 6)
         )
 
@@ -101,13 +101,13 @@ class TimingBeltSlotSimulator:
         btn_reset = ttk.Button(ctrl_row, text="Reset", command=self.reset_sim)
         btn_reset.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(4, 0))
 
-        ttk.Label(left_frame, text="Kecepatan Putaran:").pack(anchor="w", padx=10, pady=(8, 0))
+        ttk.Label(left_frame, text="Rotation Speed:").pack(anchor="w", padx=10, pady=(8, 0))
         self.speed_var = tk.DoubleVar(value=2.5)
         ttk.Scale(
             left_frame, from_=0.2, to=8.0, variable=self.speed_var, orient=tk.HORIZONTAL
         ).pack(fill=tk.X, padx=10, pady=2)
 
-        ttk.Label(left_frame, text="Inspeksi Manual (0 - 3 Putaran Belt):").pack(
+        ttk.Label(left_frame, text="Manual Inspection (0 - 3 Belt Revolutions):").pack(
             anchor="w", padx=10, pady=(8, 0)
         )
         self.manual_pos_var = tk.DoubleVar(value=0.0)
@@ -122,12 +122,12 @@ class TimingBeltSlotSimulator:
 
         legend_frame = ttk.Frame(left_frame)
         legend_frame.pack(fill=tk.X, padx=10, pady=(15, 5))
-        ttk.Label(legend_frame, text="Keterangan Visual:", style="Header.TLabel").pack(anchor="w")
-        ttk.Label(legend_frame, text="■ Biru: Badan Pulley & Rongga").pack(anchor="w")
-        ttk.Label(legend_frame, text="■ Merah: Bracket (Lintasan Chordal)").pack(anchor="w")
-        ttk.Label(legend_frame, text="■ Kuning: Garis Pitch Timing Belt").pack(anchor="w")
+        ttk.Label(legend_frame, text="Visual Legend:", style="Header.TLabel").pack(anchor="w")
+        ttk.Label(legend_frame, text="■ Blue: Pulley Body & Slot").pack(anchor="w")
+        ttk.Label(legend_frame, text="■ Red: Bracket (Chordal Path)").pack(anchor="w")
+        ttk.Label(legend_frame, text="■ Yellow: Timing Belt Pitch Line").pack(anchor="w")
 
-        # ================= PANEL TENGAH: MATPLOTLIB CANVAS =================
+        # ================= CENTER PANEL: MATPLOTLIB CANVAS =================
         center_frame = tk.Frame(main_container, bg="#181825")
         center_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 8))
 
@@ -138,18 +138,18 @@ class TimingBeltSlotSimulator:
         self.canvas = FigureCanvasTkAgg(self.fig, master=center_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        # ================= PANEL KANAN: OUTPUT PARAMETER TEKNIS =================
+        # ================= RIGHT PANEL: TECHNICAL OUTPUT PARAMETERS =================
         right_frame = ttk.Frame(main_container, width=360)
         right_frame.pack(side=tk.RIGHT, fill=tk.Y)
         right_frame.pack_propagate(False)
 
-        ttk.Label(right_frame, text="HASIL PERHITUNGAN TEKNIS", style="Header.TLabel").pack(
+        ttk.Label(right_frame, text="TECHNICAL CALCULATION RESULTS", style="Header.TLabel").pack(
             anchor="w", padx=10, pady=(10, 6)
         )
 
         self.status_banner = tk.Label(
             right_frame,
-            text="STATUS: SINKRON",
+            text="STATUS: SYNCHRONIZED",
             bg="#a6e3a1",
             fg="#11111b",
             font=("Segoe UI", 10, "bold"),
@@ -169,12 +169,12 @@ class TimingBeltSlotSimulator:
         )
         self.report_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
 
-    # ==================== PERHITUNGAN GEOMETRI & KINEMATIKA ====================
+    # ==================== GEOMETRY & KINEMATICS CALCULATION ====================
     def _solve_center_distance(self, r1, r2, L_belt):
         b = 4 * L_belt - 2 * math.pi * (2 * r2 + 2 * r1)
         disc = b**2 - 32 * (2 * r2 - 2 * r1) ** 2
         if disc <= 0:
-            raise ValueError("Panjang belt terlalu pendek untuk ukuran pulley ini!")
+            raise ValueError("Belt length is too short for these pulley sizes!")
         C = (b + math.sqrt(disc)) / 16.0
 
         for _ in range(50):
@@ -208,7 +208,7 @@ class TimingBeltSlotSimulator:
             torque = float(self.inputs["torque"].get())
 
             if any(v <= 0 for v in [pitch, z1, z2, z_belt, slots1, slots2, b_width, b_height, shaft_d1]):
-                raise ValueError("Semua nilai parameter harus lebih besar dari 0.")
+                raise ValueError("All parameter values must be greater than 0.")
 
             dp1 = (z1 * pitch) / math.pi
             dp2 = (z2 * pitch) / math.pi
@@ -229,7 +229,7 @@ class TimingBeltSlotSimulator:
 
             half_c = b_width / 2.0
             if half_c >= rp1 or half_c >= rp2:
-                raise ValueError("Lebar bracket melebihi radius pulley!")
+                raise ValueError("Bracket width exceeds pulley radius!")
 
             dip1 = rp1 - math.sqrt(rp1**2 - half_c**2)
             dip2 = rp2 - math.sqrt(rp2**2 - half_c**2)
@@ -306,57 +306,57 @@ class TimingBeltSlotSimulator:
             return True
 
         except Exception as e:
-            messagebox.showerror("Kesalahan Parameter", str(e))
+            messagebox.showerror("Parameter Error", str(e))
             return False
 
     def _update_report_panel(self):
         p = self.params
         if p["is_sync"] and p["wall_thick1"] > 1.5 and p["C"] < 100.0:
-            self.status_banner.config(text="STATUS: SINKRON & AMAN", bg="#a6e3a1", fg="#11111b")
+            self.status_banner.config(text="STATUS: SYNCHRONIZED & SAFE", bg="#a6e3a1", fg="#11111b")
         elif not p["is_sync"]:
             self.status_banner.config(
-                text="PERINGATAN: TIDAK SINKRON!", bg="#f38ba8", fg="#11111b"
+                text="WARNING: NOT SYNCHRONIZED!", bg="#f38ba8", fg="#11111b"
             )
         else:
             self.status_banner.config(
-                text="PERINGATAN: CEK DINDING / JARAK C", bg="#fab387", fg="#11111b"
+                text="WARNING: CHECK WALL / C DISTANCE", bg="#fab387", fg="#11111b"
             )
 
         ratio_str = f"1 : {p['z2']/p['z1']:.2f}"
         report = (
-            f"1. SINKRONISASI & RASIO\n"
-            f"   Rasio Transmisi : {ratio_str}\n"
-            f"   Periode Driver  : {p['z1']/p['slots1']:.1f} gigi/slot\n"
-            f"   Periode Driven  : {p['z2']/p['slots2']:.1f} gigi/slot\n"
-            f"   Sinkronisasi    : {'YA (Tepat)' if p['is_sync'] else 'TIDAK (Tabrakan!)'}\n"
+            f"1. SYNCHRONIZATION & RATIO\n"
+            f"   Transmission Ratio : {ratio_str}\n"
+            f"   Driver Period      : {p['z1']/p['slots1']:.1f} teeth/slot\n"
+            f"   Driven Period      : {p['z2']/p['slots2']:.1f} teeth/slot\n"
+            f"   Synchronization    : {'YES (Matched)' if p['is_sync'] else 'NO (Collision!)'}\n"
             f"{'-'*36}\n"
-            f"2. GEOMETRI PULLEY & BELT\n"
-            f"   Dp / Do Driver  : {p['dp1']:.2f} / {p['ro1']*2:.2f} mm\n"
-            f"   Dp / Do Driven  : {p['dp2']:.2f} / {p['ro2']*2:.2f} mm\n"
-            f"   Panjang Belt    : {p['z_belt']} gigi ({p['L_belt']:.1f} mm)\n"
-            f"   Center Distance : {p['C']:.2f} mm\n"
-            f"   Sudut Slot Drv  : {[round(360*i/p['slots1'],1) for i in range(p['slots1'])]}°\n"
-            f"   Sudut Slot Drn  : {[round(360*i/p['slots2'],1) for i in range(p['slots2'])]}°\n"
+            f"2. PULLEY & BELT GEOMETRY\n"
+            f"   Dp / Do Driver     : {p['dp1']:.2f} / {p['ro1']*2:.2f} mm\n"
+            f"   Dp / Do Driven     : {p['dp2']:.2f} / {p['ro2']*2:.2f} mm\n"
+            f"   Belt Length        : {p['z_belt']} teeth ({p['L_belt']:.1f} mm)\n"
+            f"   Center Distance (C): {p['C']:.2f} mm\n"
+            f"   Driver Slot Angles : {[round(360*i/p['slots1'],1) for i in range(p['slots1'])]}°\n"
+            f"   Driven Slot Angles : {[round(360*i/p['slots2'],1) for i in range(p['slots2'])]}°\n"
             f"{'-'*36}\n"
-            f"3. CHORDAL ACTION & DIMENSI RONGGA\n"
-            f"   [Pulley Driver]\n"
-            f"   - Chordal Dip   : {p['dip1']:.2f} mm\n"
-            f"   - Ayunan Masuk  : ±{p['swing1']:.2f} mm\n"
-            f"   - Lebar Rongga  : {p['slot_width1']:.2f} mm\n"
-            f"   - Dalam Rongga  : {p['slot_depth1']:.2f} mm\n"
-            f"   - Radius Dasar  : {p['r_base1']:.2f} mm\n\n"
-            f"   [Pulley Driven]\n"
-            f"   - Chordal Dip   : {p['dip2']:.2f} mm\n"
-            f"   - Ayunan Masuk  : ±{p['swing2']:.2f} mm\n"
-            f"   - Lebar Rongga  : {p['slot_width2']:.2f} mm\n"
-            f"   - Dalam Rongga  : {p['slot_depth2']:.2f} mm\n"
-            f"   - Radius Dasar  : {p['r_base2']:.2f} mm\n"
+            f"3. CHORDAL ACTION & SLOT DIMENSIONS\n"
+            f"   [Driver Pulley]\n"
+            f"   - Chordal Dip      : {p['dip1']:.2f} mm\n"
+            f"   - Entry Swing      : ±{p['swing1']:.2f} mm\n"
+            f"   - Slot Width       : {p['slot_width1']:.2f} mm\n"
+            f"   - Slot Depth       : {p['slot_depth1']:.2f} mm\n"
+            f"   - Base Radius      : {p['r_base1']:.2f} mm\n\n"
+            f"   [Driven Pulley]\n"
+            f"   - Chordal Dip      : {p['dip2']:.2f} mm\n"
+            f"   - Entry Swing      : ±{p['swing2']:.2f} mm\n"
+            f"   - Slot Width       : {p['slot_width2']:.2f} mm\n"
+            f"   - Slot Depth       : {p['slot_depth2']:.2f} mm\n"
+            f"   - Base Radius      : {p['r_base2']:.2f} mm\n"
             f"{'-'*36}\n"
-            f"4. KEKUATAN & KETEBALAN DINDING\n"
-            f"   Gaya Tarik Belt : {p['ft']:.2f} N ({p['ft']/9.81:.2f} kgf)\n"
-            f"   Wrap Angle Drv  : {p['wrap_deg1']:.1f}°\n"
-            f"   Sisa Gigi Aktif : {p['remaining_teeth1']:.1f} gigi (Min: 6)\n"
-            f"   Tebal Dinding   : {p['wall_thick1']:.2f} mm\n"
+            f"4. STRENGTH & WALL THICKNESS\n"
+            f"   Belt Tensile Force : {p['ft']:.2f} N ({p['ft']/9.81:.2f} kgf)\n"
+            f"   Driver Wrap Angle  : {p['wrap_deg1']:.1f}°\n"
+            f"   Remaining Teeth    : {p['remaining_teeth1']:.1f} teeth (Min: 6)\n"
+            f"   Wall Thickness     : {p['wall_thick1']:.2f} mm\n"
         )
 
         self.report_text.config(state=tk.NORMAL)
@@ -364,9 +364,9 @@ class TimingBeltSlotSimulator:
         self.report_text.insert(tk.END, report)
         self.report_text.config(state=tk.DISABLED)
 
-    # ==================== POLIGON PULLEY SEDERHANA (TANPA GIGI) ====================
+    # ==================== SIMPLE PULLEY POLYGON (WITHOUT TEETH) ====================
     def _create_simple_slotted_pulley(self, ro, num_slots, slot_w, slot_d):
-        """Membuat lingkaran luar pulley mulus dengan potongan U-slot tegas."""
+        """Creates a smooth outer pulley circle with defined U-slot cutouts."""
         half_w = min(slot_w / 2.0, ro * 0.92)
         r_base = max(1.0, ro - slot_d)
         phi_open = math.asin(half_w / ro)
@@ -379,19 +379,19 @@ class TimingBeltSlotSimulator:
             sa_curr = slot_angles[k]
             sa_next = slot_angles[(k + 1) % num_slots]
 
-            # 4 Titik Sudut U-Slot pada sudut sa_curr (dalam koordinat lokal menghadap +X)
+            # 4 U-Slot corner points at angle sa_curr (local coordinates facing +X)
             c, s = math.cos(sa_curr), math.sin(sa_curr)
             local_slot = [
-                (x_rim, -half_w),   # Bibir masuk slot
-                (r_base, -half_w),  # Sudut dasar kanan
-                (r_base, half_w),   # Sudut dasar kiri
-                (x_rim, half_w),    # Bibir keluar slot
+                (x_rim, -half_w),   # Slot entry lip
+                (r_base, -half_w),  # Right base corner
+                (r_base, half_w),   # Left base corner
+                (x_rim, half_w),    # Slot exit lip
             ]
             for lx, ly in local_slot:
                 xs.append(lx * c - ly * s)
                 ys.append(lx * s + ly * c)
 
-            # Busur lingkaran mulus menuju slot berikutnya
+            # Smooth circular arc to next slot
             arc_start = sa_curr + phi_open
             arc_end = (sa_next - phi_open) if (k + 1 < num_slots) else (2 * math.pi - phi_open)
             if arc_end > arc_start:
@@ -402,7 +402,7 @@ class TimingBeltSlotSimulator:
         return np.array(xs), np.array(ys)
 
     def _get_belt_point(self, s):
-        """Koordinat (x, y) pada jalur belt tertutup untuk posisi s (searah jarum jam)."""
+        """(x, y) coordinates on the closed belt path for position s (clockwise)."""
         p = self.params
         L = p["L_belt"]
         s = s % L
@@ -441,7 +441,7 @@ class TimingBeltSlotSimulator:
         self.ax.clear()
         p = self.params
 
-        # Poligon sederhana dengan rongga U-slot tegas
+        # Simple polygon with clean U-slot cutout
         self.poly1_x, self.poly1_y = self._create_simple_slotted_pulley(
             p["ro1"], p["slots1"], p["slot_width1"], p["slot_depth1"]
         )
@@ -449,26 +449,26 @@ class TimingBeltSlotSimulator:
             p["ro2"], p["slots2"], p["slot_width2"], p["slot_depth2"]
         )
 
-        # Jalur Pitch Belt
+        # Belt pitch line
         s_samples = np.linspace(0, p["L_belt"], 400)
         belt_pts = np.array([self._get_belt_point(sv) for sv in s_samples])
         self.ax.plot(belt_pts[:, 0], belt_pts[:, 1], color="#f9e2af", lw=2.0)
 
-        # Badan Pulley Driver & Driven
+        # Driver & Driven pulley bodies
         (self.pulley1_patch,) = self.ax.fill([], [], color="#89b4fa", alpha=0.88, ec="#cdd6f4", lw=1.5)
         (self.pulley2_patch,) = self.ax.fill([], [], color="#74c7ec", alpha=0.88, ec="#cdd6f4", lw=1.5)
 
-        # Garis jari-jari bantu agar putaran pulley mudah diamati
+        # Auxiliary spoke lines to easily observe pulley rotation
         (self.spoke1_line,) = self.ax.plot([], [], color="#1e1e2e", lw=1.5, ls="--")
         (self.spoke2_line,) = self.ax.plot([], [], color="#1e1e2e", lw=1.5, ls="--")
 
-        # Poros tengah
+        # Center shafts
         shaft1 = plt.Circle((0, 0), p["shaft_d1"] / 2.0, color="#181825", ec="#f38ba8", lw=1.5, zorder=5)
         shaft2 = plt.Circle((p["C"], 0), p["shaft_d1"] / 2.0, color="#181825", ec="#f38ba8", lw=1.5, zorder=5)
         self.ax.add_patch(shaft1)
         self.ax.add_patch(shaft2)
 
-        # Garis Center Distance
+        # Center Distance line
         self.ax.plot([0, p["C"]], [0, 0], color="#a6adc8", ls=":", lw=1.0)
         self.ax.text(
             p["C"] / 2.0,
@@ -480,7 +480,7 @@ class TimingBeltSlotSimulator:
             bbox=dict(boxstyle="round,pad=0.2", facecolor="#313244", edgecolor="none"),
         )
 
-        # Bracket bergerak
+        # Moving bracket
         (self.bracket_patch,) = self.ax.fill([], [], color="#f38ba8", ec="#ffffff", lw=1.5, zorder=10)
 
         margin = 14.0
@@ -491,7 +491,7 @@ class TimingBeltSlotSimulator:
         self.ax.grid(True, color="#313244", linestyle="--", linewidth=0.5)
         self.ax.tick_params(colors="#a6adc8", labelsize=8)
         self.ax.set_title(
-            f"Simulasi Kinematika Pulley Berongga (Z1={p['z1']}, Z2={p['z2']}, Belt={p['z_belt']}T)",
+            f"Slotted Pulley Kinematics Simulation (Z1={p['z1']}, Z2={p['z2']}, Belt={p['z_belt']}T)",
             color="#cdd6f4",
             fontsize=11,
             fontweight="bold",
@@ -501,29 +501,29 @@ class TimingBeltSlotSimulator:
     def _render_frame(self, s_total):
         p = self.params
 
-        # 1. Rotasi Pulley Driver murni berdasarkan jarak linier belt s_total
+        # 1. Driver pulley rotation directly based on linear belt travel s_total
         theta1 = math.pi - (s_total / p["rp1"])
         c1, s1 = math.cos(theta1), math.sin(theta1)
         x1_rot = self.poly1_x * c1 - self.poly1_y * s1
         y1_rot = self.poly1_x * s1 + self.poly1_y * c1
         self.pulley1_patch.set_xy(np.column_stack([x1_rot, y1_rot]))
 
-        # Garis spoke berlawanan arah slot (theta1 + pi)
+        # Spoke line opposite slot direction (theta1 + pi)
         self.spoke1_line.set_data([0, -p["ro1"] * c1], [0, -p["ro1"] * s1])
 
-        # 2. Rotasi Pulley Driven murni berdasarkan s_total (rasio 1 : Z2/Z1)
+        # 2. Driven pulley rotation directly based on s_total (ratio 1 : Z2/Z1)
         theta2 = (p["L_belt"] / (2.0 * p["rp2"])) - (s_total / p["rp2"])
         c2, s2 = math.cos(theta2), math.sin(theta2)
         x2_rot = p["C"] + (self.poly2_x * c2 - self.poly2_y * s2)
         y2_rot = self.poly2_x * s2 + self.poly2_y * c2
         self.pulley2_patch.set_xy(np.column_stack([x2_rot, y2_rot]))
 
-        # Garis spoke tegak lurus slot (theta2 + pi/2)
+        # Spoke line perpendicular to slot direction (theta2 + pi/2)
         self.spoke2_line.set_data(
             [p["C"], p["C"] - p["ro2"] * s2], [0, p["ro2"] * c2]
         )
 
-        # 3. Posisi Rigid Bracket di sepanjang lintasan belt (s_total % L_belt)
+        # 3. Rigid bracket position along belt path (s_total % L_belt)
         half_c = p["b_width"] / 2.0
         p_rear = np.array(self._get_belt_point(s_total - half_c))
         p_front = np.array(self._get_belt_point(s_total + half_c))
